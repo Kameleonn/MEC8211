@@ -14,13 +14,11 @@ The content is organized to reflect the progression of the course and includes i
 MEC8211/
 ├── Devoirs/
 │   ├── Devoir_1/
-│   │   ├── code/       # Source code for HW1
-│   │   ├── report/     # Report / write-up for HW1
-│   │   └── data/       # Input/output files
+│   │   ├── src/       # Source code for HW1
+│   │   └── report.ipynb      # Notebook file where we put all answers
 │   ├── Devoir_2/
-│   │   ├── code/
-│   │   ├── report/
-│   │   └── data/
+│   │   ├── src/    
+│   │   └── report.ipynb     
 │   └── ...             # Additional homework folders
 ├── Project/
 │   ├── src/            # Source code for the project
