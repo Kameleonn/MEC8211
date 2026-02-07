@@ -42,10 +42,9 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     # Traitement de la singularité 1/r par L'Hôpital.
     # L'équation devient : 2 * d^2C/dr^2 = S/Deff
     # Avec symétrie (C_-1 = C_1), cela donne : 4(C_1 - C_0)/dr^2 = S/Deff
-    A[0, 0] = -4.0
-    A[0, 1] = 4.0
-    b[0] = const_source * (dr**2)
-
+    A[0, 0] = -1.0
+    A[0, 1] = 1.0
+    b[0] = 0
     # --- 2. NŒUDS INTÉRIEURS (0 < r < R) ---
     for i in range(1, N - 1):
         ri = r[i]
