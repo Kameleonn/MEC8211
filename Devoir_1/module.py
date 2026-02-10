@@ -84,5 +84,14 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     
     # Résolution
     C = np.linalg.solve(A, b)
+
+    # --- CALCUL DES ERREURS ---
+    C_exact = solution_analytique(r, R, S, Deff, Ce)
+
+    L1 = np.mean(np.abs(C - C_exact))
+    # Erreur L2
+    L2 = np.sqrt(np.mean((C - C_exact)**2))
+    # Erreur Linfini
+    Linf = np.max(np.abs(C - C_exact))
     
-    return r, C
+    return r, C, L1, L2, Linf
