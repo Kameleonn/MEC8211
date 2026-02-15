@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.linalg import solve
+
 
 def solution_analytique(r, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0):
     """
@@ -42,9 +44,19 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     # Traitement de la singularité 1/r par L'Hôpital.
     # L'équation devient : 2 * d^2C/dr^2 = S/Deff
     # Avec symétrie (C_-1 = C_1), cela donne : 4(C_1 - C_0)/dr^2 = S/Deff
-    A[0, 0] = -1.0
-    A[0, 1] = 1.0
-    b[0] = 0
+    if schema == 'D':
+        # Schéma décentré avant (Forward) : C_1 - C_0 = (S/Deff) * (dr^2 / 4)
+        A[0, 0] = -1.0
+        A[0, 1] = 1.0
+        b[0] = 0
+    elif schema == 'E':
+        # Question E : Limite de L'Hôpital (Ordre 2)
+        # Intègre la symétrie (flux nul) ET le terme source (S/Deff)
+        A[0, 0] = -3.0
+        A[0, 1] = 4.0
+        A[0, 2] = -1.0
+        b[0] = 0.0
+
     # --- 2. NŒUDS INTÉRIEURS (0 < r < R) ---
     for i in range(1, N - 1):
         ri = r[i]
@@ -69,13 +81,13 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
             # Terme 1/r * dC/dr devient : (1/ri) * (C_{i+1} - C_{i-1})/(2*dr)
             
             # C_{i-1}
-            A[i, i-1] = inv_dr2 - 0.5 * inv_rdr
+            A[i, i-1] =  (inv_dr2 - 0.5 * inv_rdr)
             # C_{i}
-            A[i, i]   = -2.0 * inv_dr2
+            A[i, i]   = -2.0 * inv_dr2 
             # C_{i+1}
-            A[i, i+1] = inv_dr2 + 0.5 * inv_rdr
+            A[i, i+1] =  (inv_dr2 + 0.5 * inv_rdr)
             
-        b[i] = const_source
+        b[i] = S/Deff
 
     # --- 3. CONDITION FRONTIÈRE SURFACE (r=R, i=N-1) ---
     # Condition de Dirichlet : C = Ce [cite: 26]
@@ -83,7 +95,7 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     b[N-1] = Ce
     
     # Résolution
-    C = np.linalg.solve(A, b)
+    C = solve(A, b)
 
     # --- CALCUL DES ERREURS ---
     C_exact = solution_analytique(r, R, S, Deff, Ce)
@@ -94,4 +106,4 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     # Erreur Linfini
     Linf = np.max(np.abs(C - C_exact))
     
-    return r, C, L1, L2, Linf
+    return r, C
