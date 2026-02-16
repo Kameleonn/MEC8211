@@ -5,7 +5,6 @@ from scipy.linalg import solve
 def solution_analytique(r, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0):
     """
     Calcule la solution analytique exacte selon l'équation (2) du devoir.
-    Source: [50]
     """
     term = (1/4) * (S / Deff) * (R**2) * ((r**2 / R**2) - 1)
     return term + Ce
@@ -21,8 +20,8 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     R, S, Deff, Ce : float
         Paramètres physiques du problème.
     schema : str
-        'D' pour le schéma décentré (Question D - Source [55])
-        'E' pour le schéma centré (Question E - Source [67])
+        'D' pour le schéma décentré (Question D)
+        'E' pour le schéma centré (Question E)
         
     Retourne:
     ---------
@@ -41,17 +40,15 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     const_source = S / Deff
 
     # --- 1. CONDITION FRONTIÈRE AU CENTRE (r=0, i=0) ---
-    # Traitement de la singularité 1/r par L'Hôpital.
-    # L'équation devient : 2 * d^2C/dr^2 = S/Deff
-    # Avec symétrie (C_-1 = C_1), cela donne : 4(C_1 - C_0)/dr^2 = S/Deff
     if schema == 'D':
-        # Schéma décentré avant (Forward) : C_1 - C_0 = (S/Deff) * (dr^2 / 4)
+        # Question D : 
+        # Schéma décentré avant (Forward) 
         A[0, 0] = -1.0
         A[0, 1] = 1.0
         b[0] = 0
     elif schema == 'E':
-        # Question E : Limite de L'Hôpital (Ordre 2)
-        # Intègre la symétrie (flux nul) ET le terme source (S/Deff)
+        # Question E : 
+        # Intègre la symétrie (flux nul) 
         A[0, 0] = -3.0
         A[0, 1] = 4.0
         A[0, 2] = -1.0
@@ -67,9 +64,8 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
         
         if schema == 'D':
             # Question D : Dérivée première décentrée avant (Forward) [cite: 55]
-            # Terme 1/r * dC/dr devient : (1/ri) * (C_{i+1} - C_i)/dr
             
-            # C_{i-1} (vient seulement du Laplacien)
+            # C_{i-1}
             A[i, i-1] = inv_dr2
             # C_{i}
             A[i, i]   = -2.0 * inv_dr2 - inv_rdr
@@ -78,7 +74,6 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
             
         elif schema == 'E':
             # Question E : Dérivée première centrée [cite: 67]
-            # Terme 1/r * dC/dr devient : (1/ri) * (C_{i+1} - C_{i-1})/(2*dr)
             
             # C_{i-1}
             A[i, i-1] =  (inv_dr2 - 0.5 * inv_rdr)
@@ -90,20 +85,11 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
         b[i] = S/Deff
 
     # --- 3. CONDITION FRONTIÈRE SURFACE (r=R, i=N-1) ---
-    # Condition de Dirichlet : C = Ce [cite: 26]
+    # Condition de Dirichlet : C = Ce 
     A[N-1, N-1] = 1.0
     b[N-1] = Ce
     
     # Résolution
     C = solve(A, b)
-
-    # --- CALCUL DES ERREURS ---
-    C_exact = solution_analytique(r, R, S, Deff, Ce)
-
-    L1 = np.mean(np.abs(C - C_exact))
-    # Erreur L2
-    L2 = np.sqrt(np.mean((C - C_exact)**2))
-    # Erreur Linfini
-    Linf = np.max(np.abs(C - C_exact))
     
     return r, C
