@@ -1,34 +1,25 @@
 import numpy as np
 from scipy.linalg import solve
 
+########################
+# Constantes physiques #
+########################
 
-def solution_analytique(r, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0):
-    """
-    Calcule la solution analytique exacte selon l'équation (2) du devoir.
-    """
-    term = (1/4) * (S / Deff) * (R**2) * ((r**2 / R**2) - 1)
-    return term + Ce
+R = 0.5 # Rayon du pilier (m)
+D_EFF = 1e-10 # Diffusivité effective (m^2/s)
+C_E = 20.0 # Concentration à la surface (mol/m^3)
+K = 4e-9 # (1/s)
 
-def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
+def solve_fdm_implicite(N, dt):
     """
-    Résout l'équation de diffusion 1D radiale par différences finies.
-    
-    Paramètres:
-    -----------
-    N : int
-        Nombre total de nœuds.
-    R, S, Deff, Ce : float
-        Paramètres physiques du problème.
-    schema : str
-        'D' pour le schéma décentré (Question D)
-        'E' pour le schéma centré (Question E)
-        
-    Retourne:
-    ---------
-    r : array
-        Vecteur des positions radiales.
-    C : array
-        Vecteur des concentrations calculées.
+    Résout l'équation de diffusion 1D radiale instationnaire par différences finies implicites.
+
+    Args:
+        N (int): Nombre total de nœuds.
+        dt (float): Pas de temps.
+
+    Returns:
+        tuple: Vecteur des concentrations calculées.
     """
     # Création du maillage
     dr = R / (N - 1)
@@ -92,4 +83,4 @@ def solve_finite_difference(N, R=0.5, S=2e-8, Deff=1e-10, Ce=20.0, schema='D'):
     # Résolution
     C = solve(A, b)
     
-    return r, C
+    return C
