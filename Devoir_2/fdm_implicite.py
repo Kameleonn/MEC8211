@@ -10,12 +10,13 @@ D_EFF = 1e-10 # Diffusivité effective (m^2/s)
 C_E = 20.0 # Concentration à la surface (mol/m^3)
 K = 4e-9 # (1/s)
 
-def solve_fdm_implicite(N, dt):
+def solve_fdm_implicite(N, T, dt):
     """
     Résout l'équation de diffusion 1D radiale instationnaire par différences finies implicites.
 
     Args:
         N (int): Nombre total de nœuds.
+        T (float): Temps total de simulation.
         dt (float): Pas de temps.
 
     Returns:
