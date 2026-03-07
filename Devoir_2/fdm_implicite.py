@@ -48,7 +48,7 @@ def solve_fdm_implicite(N, T, N_t, D_EFF =1e-10, K = 4e-9):
         
         # Nœuds intérieurs
         for j in range(1, N - 1):
-            terme_source_MMS = -1 * D_EFF * (-(t[i+1])*np.cos(r[j]) + np.exp(r[j])*np.sin(t[i+1]) + (-(t[i+1])*np.sin(r[j]) + np.exp(r[j])*np.sin(t[i+1]))/r[j]) + K * ((t[i+1])*np.cos(r[j]) + np.exp(r[j])*np.sin(t[i+1])) + np.exp(r[j]) * np.cos(t[i+1]) + np.cos(r[j])
+            terme_source_MMS = -1 * D_EFF * (-1 * t[i+1]*np.cos(r[j]) + np.exp(r[j])*np.sin(t[i+1]) + (-(t[i+1])*np.sin(r[j]) + np.exp(r[j])*np.sin(t[i+1]))/r[j]) + K * ((t[i+1])*np.cos(r[j]) + np.exp(r[j])*np.sin(t[i+1])) + np.exp(r[j]) * np.cos(t[i+1]) + np.cos(r[j])
             A[j, j-1] = -1 *dt * D_EFF * (1 - dr/(2*r[j]))
             A[j, j] = dr**2 + 2 * dt * D_EFF + K * dr**2 * dt
             A[j, j+1] = -1 * dt * D_EFF * (1 + dr/(2*r[j]))
