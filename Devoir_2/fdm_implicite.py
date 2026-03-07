@@ -59,6 +59,67 @@ def solve_fdm_implicite(N, T, N_t, D_EFF =1e-10, K = 4e-9):
     
     return C
 
+def solve_fdm_implicite_originel(N, T, N_t, D_EFF=1e-10, K=4e-9, C_e=20.0, R=0.5):
+    """
+    Résout l'équation de diffusion 1D radiale instationnaire pour le problème originel.
+  
+    Args:
+        N (int): Nombre total de nœuds en espace.
+        T (float): Temps total de simulation (s).
+        N_t (int): Nombre de pas de temps.
+        D_EFF (float): Coefficient de diffusion effectif (m²/s).
+        K (float): Constante de réaction (s⁻¹).
+        C_e (float): Concentration à la surface (mol/m³).
+        R (float): Rayon du pilier (m).
+    
+    Returns:
+        tuple: (C, r, t) où C est la matrice des concentrations (N*N_t),
+               r est le vecteur des positions radiales, t le vecteur des temps.
+    """
+    
+    # Création du maillage
+    r = np.linspace(0, R, N)
+    t = np.linspace(0, T, N_t)
+    dr = r[1] - r[0]
+    dt = t[1] - t[0]
+
+    # Initialisation matricielle (Systeme A*C = b)
+    A = np.zeros((N, N))
+    b = np.zeros((N))
+    C = np.zeros((N, N_t)) # Sert aussi pour la condition initiale nulle
+    
+    # Nœuds intérieurs
+    for j in range(1, N-1):
+        A[j, j-1] = -dt * D_EFF * (1 - dr/(2*r[j]))
+        A[j, j] = dr**2 + 2 * dt * D_EFF + K * dr**2 * dt
+        A[j, j+1] = -dt * D_EFF * (1 + dr/(2*r[j]))
+    
+    # Condition frontière au centre (r=0, i=0)
+    A[0, 0] = -3
+    A[0, 1] = 4
+    A[0, 2] = -1
+    
+    # Condition frontière à la surface (r=R, i=N-1)
+    A[-1, -1] = 1
+    
+    # Loop temporel
+    for i in range(N_t - 1):
+        # Remplissage du vecteur b
+        for j in range(1, N-1):
+            b[j] = dr**2 * C[j, i]
+        
+        # Condition frontière au centre (r=0, i=0)
+        b[0] = 0
+        
+        # Condition frontière à la surface (r=R, i=N-1)
+        b[-1] = C_e
+        
+        # Résolution du système linéaire pour le pas de temps ti+1
+        C[:, i+1] = solve(A, b)
+    
+    return C, r, t
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     N = 10
@@ -71,13 +132,24 @@ if __name__ == "__main__":
     ti, ri = np.meshgrid(t_dom, r_dom)
 
     # Evaluation de la solution numérique sur le domaine
-    C = solve_fdm_implicite(N, T, N_t)
+    C_MMS = solve_fdm_implicite(N, T, N_t)
+    C_originel = solve_fdm_implicite_originel(N, T, N_t)
 
     # Tracage de la solution numérique
     plt.figure()
-    plt.contourf(ri, ti, C, levels=20)
+    plt.contourf(ri, ti, C_MMS, levels=20)
     plt.colorbar()
     plt.title('Solution Numerique')
     plt.xlabel('Rayon r (m)')
     plt.ylabel('Temps t (s)')
+
+    # Tracé de la solution originelle
+    # Tracé de la solution originelle
+    plt.subplot(1, 2, 2)
+    plt.contourf(ri, ti, C_originel, levels=20)
+    plt.colorbar()
+    plt.title('Solution originelle')
+    plt.xlabel('Rayon r (m)')
+    plt.ylabel('Temps t (s)')
+
     plt.show()
