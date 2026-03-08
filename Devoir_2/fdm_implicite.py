@@ -1,14 +1,6 @@
 import numpy as np
 from scipy.linalg import solve
 import sympy as sp
-
-########################
-# Constantes physiques #
-########################
-R = 0.5 # Rayon du pilier (m)
- # Diffusivité effective (m^2/s)
-C_E = 20.0 # Concentration à la surface (mol/m^3)
- # (1/s)
  
 def get_symbolic_functions(C_MMS):
     """
@@ -47,7 +39,7 @@ def get_symbolic_functions(C_MMS):
     return f_source, f_C_surface, f_C_r_centre, f_C_MMS
 
 
-def solve_fdm_implicite(N, T, N_t, D_EFF, K, C_MMS = None):
+def solve_fdm_implicite(N, T, N_t, D_EFF, K, R = 0.5, C_e = None, C_MMS = None):
     """
     Résout l'équation de diffusion 1D radiale instationnaire par différences finies implicites.
 
@@ -76,7 +68,7 @@ def solve_fdm_implicite(N, T, N_t, D_EFF, K, C_MMS = None):
         # Si aucune fonction MMS n'est fournie, on instancie les fonctions à des fonctions lambda retournant 0, pour la source, la condition de Neumann et la condition
         # initiale. Pour la condition de Dirichlet, on retourne la valeur de C_e à la surface. Et ce, pour n'importe quelle valeur d'arguments
         f_source = lambda t, r, d_eff_symbm, k_symb, R_symb: 0
-        f_C_surface = lambda t, r, d_eff_symbm, k_symb, R_symb: C_E
+        f_C_surface = lambda t, r, d_eff_symbm, k_symb, R_symb: C_e
         f_C_r_centre = lambda t, r, d_eff_symbm, k_symb, R_symb: 0
         f_C = lambda t, r: np.zeros(len(rdom))
     
@@ -110,4 +102,4 @@ def solve_fdm_implicite(N, T, N_t, D_EFF, K, C_MMS = None):
         # Résolution du système linéaire pour le pas de temps ti+1  
         C[:, i+1] = solve(A, b)
     
-    return C
+    return C, rdom, tdom
