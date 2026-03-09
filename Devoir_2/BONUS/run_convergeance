@@ -1,0 +1,115 @@
+#!/usr/bin/bash
+#set -ex
+# But: ce script sert à lancer une analyse de convergence pour 
+#      un code numérique (p.ex. fdm_implicite.py) passée
+#      argument 1 ($1), un fichier de données d'entrée 
+#      (p.ex. liste_de_resolutions.txt) passé en argument 2 ($2)
+#      et un le nom de la variable sur laquelle on veut faire une 
+#      analyse de convergence passé en argument 3 ($3). Dans ce cas,
+#      les deux seuls possibilités sont soit "r" ou "t".
+
+# Exemple de lancement : run_convergeance fdm_implicite liste_de_resolutions r
+
+# messages
+#---------
+  USAGE="Usage: run_convergeance {nom du programme} {fichier contenant les nombres de points} {r ou t}"
+#
+#====================================================================
+# vérifier si le script a le bon nombre d'arguments (2) ou abandonner
+#====================================================================
+  if test $# -ne 3
+  then echo "Nombre d'arguments erroné: $USAGE"
+       exit
+  fi
+#
+# ===============
+# initialisations
+# ===============
+#
+  editor=nano
+
+  nb_resolutions=`wc -l $2 | awk '{print $1}'` # nombre de résolution
+  nb_compt=1  # compteur de la boucle
+  fichier_resultats="donnees_erreurs.txt"
+  echo "delta L1 L2 Linf" > $fichier_resultats
+
+# Permet de garder une trace pour les graphiques afin de savoir sur quelle variable on fait la convergence
+  if [ "$3" = "r" ]; then
+	echo "r" >> $fichier_resultats
+  elif [ "$3" = "t" ]; then
+    	echo "t" >> $fichier_resultats
+  fi
+
+
+  echo ""
+  echo "*******************************************"
+  echo "        ANALYSE DE CONVERGENCE"
+  echo "*******************************************"
+  echo ""
+  echo "--> Nombre de résolutions testées : "$nb_resolutions
+  echo ""
+
+#
+# ------------------------------------------------
+# verifie si le fichier $1.py du programme existe
+# ------------------------------------------------
+#
+  if test -s $1.py ; then
+	  echo "--> Le fichier "$1".py existe !"
+	  echo ""
+          echo "Editer le fichier "$1".py (o-n) ?"
+          read rep
+               if test "$rep" = "o"; then
+		       $editor $1.py
+               fi
+  else echo "ALERTE: Le fichier "$1".py n'existe pas ! Sortie du script..."
+       exit
+  fi
+
+#
+# Boucle principale sur le nombre de résolution
+#
+  while [[ nb_compt -le nb_resolutions ]]; do
+
+	   new_intervals=`head -$nb_compt $2 | tail -1` # prochain nombre d'intervalle
+
+           echo ""
+           echo "--> Calcul pour "$new_intervals" intervalles...."
+
+	   #
+           # écriture des fichiers intermédiaires dans un répertoire spécifique 
+	   # et compilation du fichier $1.py
+           #
+	   mkdir -v simulation_avec_$new_intervals
+
+	   # Selon quel convergence on veut, on utilise la commande sed avec des valeurs differentes 
+	   if [ "$3" = "r" ]; then
+		sed -e 's/VVVV/"r"/' -e "s/YYYY/$new_intervals/" -e "s/ZZZZ/0/" $1.py > simulation_avec_$new_intervals/$1.py
+	   elif [ "$3" = "t" ]; then
+    		sed -e 's/VVVV/"t"/' -e "s/YYYY/0/" -e "s/ZZZZ/$new_intervals/" $1.py > simulation_avec_$new_intervals/$1.py
+	   fi
+
+	   # compilation du nouveau fichier $1.py dans son répertoire dédié et redirection des resultats
+	   resultats=$(python simulation_avec_$new_intervals/$1.py)
+	   echo $resultats >> $fichier_resultats
+
+	   # effacement des fichiers dans le répertoire dédié et effacement de celui-ci
+	   rm -f simulation_avec_$new_intervals/$1.py
+	   rmdir -v simulation_avec_$new_intervals
+
+	   echo ".... Done !"
+
+	   # incrémentation du compteur
+           nb_compt=`expr $nb_compt + 1`
+  done
+  # sortie de la boucle
+
+  echo ""
+  echo "--> Exécution du script analyse_de_convergence.py..."
+  echo ""
+
+python analyse_de_convergance.py
+
+  echo ""
+  echo "--> Done"
+  echo ""
