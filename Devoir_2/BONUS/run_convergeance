@@ -15,7 +15,7 @@
   USAGE="Usage: run_convergeance {nom du programme} {fichier contenant les nombres de points} {r ou t}"
 #
 #====================================================================
-# vérifier si le script a le bon nombre d'arguments (2) ou abandonner
+# vérifier si le script a le bon nombre d'arguments (3) ou abandonner
 #====================================================================
   if test $# -ne 3
   then echo "Nombre d'arguments erroné: $USAGE"
