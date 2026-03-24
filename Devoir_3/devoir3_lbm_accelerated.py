@@ -65,7 +65,8 @@ def Generate_sample(seed, filename, mean_d, std_d, poro, nx, dx, plot=False):
 
     dist_d       = np.sort(dist_full[:nb_fiber])[::-1]
     d_equivalent = np.sum(dist_d ** 2) / np.sum(dist_d)
-    print(f"d_equivalent     = {d_equivalent:.4f} µm")
+    if plot:
+        print(f"d_equivalent     = {d_equivalent:.4f} µm")
 
     # -------------------------------------------------------------------------
     # Positionnement des fibres (sans chevauchement, conditions périodiques)
@@ -100,7 +101,8 @@ def Generate_sample(seed, filename, mean_d, std_d, poro, nx, dx, plot=False):
         circles[fiber_count] = [xi, yi, di]
         fiber_count += 1
 
-    print(f"number_of_fibres = {fiber_count}")
+    if plot:
+        print(f"number_of_fibres = {fiber_count}")
 
     # -------------------------------------------------------------------------
     # Remplissage de la grille — vectorisé NumPy (pas de boucle Python i,j)
@@ -267,8 +269,9 @@ def LBM(filename, NX, deltaP, dx, d_equivalent, plot=False):
     FlowRate     = 0.0
     t_           = 1
 
-    print("Démarrage LBM (Numba JIT multi-cœur)...")
-    print("Compilation JIT au 1er pas — quelques secondes d'attente normale.")
+    if plot:
+        print("Démarrage LBM (Numba JIT multi-cœur)...")
+        print("Compilation JIT au 1er pas — quelques secondes d'attente normale.")
 
     # Boucle temporelle
     while FlowRate == 0.0 or abs(FlowRate_old - FlowRate) / abs(FlowRate) >= epsilon:
@@ -279,10 +282,11 @@ def LBM(filename, NX, deltaP, dx, d_equivalent, plot=False):
         FlowRate     = FlowRate_new
         t_          += 1
 
-        if t_ % 500 == 0:
+        if t_ % 500 == 0 and plot:
             print(f"  pas {t_:6d} | FlowRate = {FlowRate:.6e}")
 
-    print(f"Convergence après {t_} pas de temps.")
+    if plot:
+        print(f"Convergence après {t_} pas de temps.")
 
     # Résultats
     poro_eff = 1.0 - SOLID.sum() / (NX * NY)
@@ -290,9 +294,10 @@ def LBM(filename, NX, deltaP, dx, d_equivalent, plot=False):
     Re  = rho0 * u_mean * poro_eff * d_equivalent * 1e-6 / (mu * (1 - poro_eff))
     k   = u_mean * mu / deltaP * (NX * dx) * 1e12
 
-    print(f"\nporo_eff         = {poro_eff:.6f}")
-    print(f"Re               = {Re:.6e}")
-    print(f"k_in_micron2     = {k:.6f} µm²")
+    if plot:
+        print(f"\nporo_eff         = {poro_eff:.6f}")
+        print(f"Re               = {Re:.6e}")
+        print(f"k_in_micron2     = {k:.6f} µm²")
 
     # Visualisation
     # origin='lower' : Y=1 en bas, croît vers le haut → cohérent avec Generate_sample
